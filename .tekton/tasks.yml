@@ -3,6 +3,7 @@ kind: Task
 metadata:
   name: cleanup
 spec:
+  description: This task removes all files from the workspace source path
   workspaces:
     - name: source
   steps:
@@ -11,8 +12,13 @@ spec:
       workingDir: $(workspaces.source.path)
       securityContext:
         runAsUser: 0
+      env:
+        - name: WORKSPACE_SOURCE_PATH
+          value: $(workspaces.source.path)
       script: |
         #!/usr/bin/env sh
+        rm -rf "${WORKSPACE_SOURCE_PATH}"/*
+        rm -rf "${WORKSPACE_SOURCE_PATH}"/.[!.]*
         rm -rf *
 ---
 apiVersion: tekton.dev/v1beta1
@@ -20,10 +26,11 @@ kind: Task
 metadata:
   name: nose
 spec:
+  description: This task runs nose unit tests
   workspaces:
     - name: source
   steps:
-    - name: nosetests
+    - name: Run unit tests with nose
       image: python:3.9-slim
       workingDir: $(workspaces.source.path)
       script: |
